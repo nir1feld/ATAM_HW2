@@ -74,7 +74,7 @@ sum_of_text:
 
     // else its a number so:
     movswq %ax, %rax // cast to 64bit num
-    add %rax, %r14 // add the number to the sum
+    addq %rax, %r14 // add the number to the sum
     
     check_eof_flag:
     cmpq $0, %rbx //check if EOF flag is up (its up if 0 or less)
@@ -83,7 +83,8 @@ sum_of_text:
     jmp read_char 
 
 end:
-movl %r14, %eax
+xorq %rax, %rax
+movw %r14w, %ax
 popq %rbp
 popq %r14
 popq %r13
