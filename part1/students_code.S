@@ -18,9 +18,9 @@ sum_of_text:
     // open file syscall
     call get_path   // puts path in rax.
     movq %rax, %rdi // path in -arg1
-    movl $2, %rax   //open syscall id
+    mov $2, %rax   //open syscall id
     movq $0, %rsi   //read only -arg2
-    movl $0, %rdx   //mode -arg3
+    mov $0, %rdx   //mode -arg3
     syscall
     movq %rax, %r12 //store FD in r12
 
@@ -32,10 +32,10 @@ sum_of_text:
     // read syscall (one char at a time)
     read_char:
     dec %rsp         //make space in the stack for the char
-    movl $0, %rax    // read syscall
+    mov $0, %rax    // read syscall
     movq %r12, %rdi  // set FD -arg1
     movq %rsp, %rsi  // char storage destination -arg2
-    movl $1, %rdx    // read size - 1 byte - arg3
+    mov $1, %rdx    // read size - 1 byte - arg3
     syscall          // char will be at %eax
 
     cmpq $0, %rax //if we read 0 bytes file ended, if negative err
