@@ -5,68 +5,89 @@
 .extern text_to_number
 
 sum_of_text:
-    //todo push all registers to stack here (convention)
-    movb %dil, %r11 //store given separator
+    // done :)
+    pushq %rbx
+    pushq %r12
+    pushq %r13
+    pushq %r14
+    pushq %rbp
+    movq %rsp, %rbp
 
-    subq $1, %rsp //make space in the stack for the char value
-    call get_path
-    movl $2, %rax //open syscall
+    movb %dil, %r13b // sep stored in %r13b
+
+    // open file syscall
+    call get_path   // puts path in rax.
     movq %rax, %rdi // path in -arg1
-    movq $0, %rsi //read only -arg2
-    movl $0, %rdx//mode -arg3
+    movl $2, %rax   //open syscall id
+    movq $0, %rsi   //read only -arg2
+    movl $0, %rdx   //mode -arg3
     syscall
+    movq %rax, %r12 //store FD in r12
 
-    movq %eax, %r12 //store FD
-    movl $0, %r14 //r14 will be the counter
+    xor %r14, %r14   //r14 will be the curr_sum variable
+    movq $1, %rbx // will be used as the EOF flag, counts as set if less/eq to 0
 
-    loop:
-    movl $0, %rax //read syscall
-    movq %r12, %rdi // set FD -arg1
-    movq %rsp, %rsi //read destination -arg2
-    movl %1, %rdx //read size - 1 byte - arg3
-    syscall //char will be at %eax
+    movq %rsp, %rbp // this funcitons as the defcato str start. MAYBE BAD!!!
 
-    cmpb $0, %rax //if end of file reached
-    je return_sum
+    // read syscall (one char at a time)
+    read_char:
+    dec %rsp         //make space in the stack for the char
+    movl $0, %rax    // read syscall
+    movq %r12, %rdi  // set FD -arg1
+    movq %rsp, %rsi  // char storage destination -arg2
+    movl $1, %rdx    // read size - 1 byte - arg3
+    syscall          // char will be at %eax
 
-    movb (%rsp), %cl
-    movl %r12, %r10
+    cmpq $0, %rax //if we read 0 bytes file ended, if negative err
+    jle handle_eof
 
-    find_separator_with_null:
-    movb (%r10), %cl //%cl - next char
-    cmpb %r11b, %cl //separator
-    je find_word_return_separator
+    // load char to %al:
+    movb (%rsi), %al
 
-    cmpb $0x0A, %cl //end of line
-    je find_word
+    cmpb $13, %al // cmp with  "\n"
+    je handle_word_end
 
-    incq %r10 //go to next char
-    jmp find_separator_with_null
+    cmpb $10, %al // cmp with "\r"
+    je handle_word_end
+
+    cmpb %r13b, %al 
+    je handle_word_end
+
+    jmp read_char
 
 
-    find_word_return_separator:
-    movb $0, (%r10) //overwrite separator
-    movl %r12, %rdi //pass char*
+    handle_eof:
+    movq %rax, %rbx
+
+    handle_word_end:
+    movb $0, (%rsp) //replace seperator with null terminator
+    
+    //call converter func
+    movq %rsp, %rdi
     call text_to_number
-    cmpb $-1, %eax
-    je loop
-    addl %eax, %r14
-    movb %r11b, (%r10) //return separator
-    movl %r10, %r12
-    incb %r12
-    jmp loop
 
+    // reset stack
+    movq %rbp, %rsp
 
-    find_word_end_line:
-    movl %r12, %rdi //pass char*
-    call text_to_number
-    cmpb $-1, %eax
-    je loop
-    addl %eax, %r14
-    movl %r10, %r12
-    incb %r12
-    jmp loop
+    cmpw $-1, %ax
+    je check_eof_flag
 
-    return_sum:
-    movl %r14, %eax
-  ret
+    // else its a number so:
+    movswq %ax, %rax // cast to 64bit num
+    add %rax, %r14 // add the number to the sum
+    
+    check_eof_flag:
+    cmpq $0, %rbx //check if EOF flag is up (its up if 0 or less)
+    jle end
+
+    jmp read_char 
+
+end:
+movl %r14, %eax
+popq %rbp
+popq %r14
+popq %r13
+popq %r12
+popq %rbx
+ret
+
