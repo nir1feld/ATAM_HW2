@@ -14,7 +14,7 @@ sum_of_text:
 
     movb %dil, %r13b // sep stored in %r13b
 
-    // open file syscall
+    open_file:
     call get_path   // puts path in rax.
     movq %rax, %rdi // path in -arg1
     mov $2, %rax   //open syscall id
@@ -96,6 +96,11 @@ sum_of_text:
     jmp read_char 
 
 end:
+close_file:
+movq $3, %rax
+movq %r12, %rdi
+syscall
+
 xorq %rax, %rax
 movw %r14w, %ax
 popq %rbp
