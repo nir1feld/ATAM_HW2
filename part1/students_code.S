@@ -61,7 +61,21 @@ sum_of_text:
     handle_word_end:
     movb $0, (%rsp) //replace seperator with null terminator
     
-    //call converter func
+    reverse_string_on_stack:
+    movq %rbp, %r8 // r8 as char* to begin
+    movq %rsp, %r9 // r9 as char* to end
+
+    loop:
+    cmpq %r8, %r9
+    je call_converter_func
+    // else:
+    decq %rsp //make space for a char
+    movb (%r9), %r10b
+    movb %r10b, (%rsp)
+    incq %r9
+    jmp loop
+
+    call_converter_func:
     movq %rsp, %rdi
     call text_to_number
 
@@ -90,4 +104,3 @@ popq %r13
 popq %r12
 popq %rbx
 ret
-
