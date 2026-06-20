@@ -33,12 +33,12 @@ my_ili_handler:
 
     ## one byte opcode
     movb %al, %dil ## load first byte to dil
-    incq %r10 ## the return address will advance one line after the original command
+    incq %r10 ## the return address will advance one byte after the original command
     jmp call_what_to_do
 
 handle_long_opcode:
     movb 1(%r10), %dil ## load second byte to dil
-    addq $2, %r10  ## the return address will advance two lines after the original command
+    addq $2, %r10  ## the return address will advance two bytes after the original command
 
 call_what_to_do:
     call what_to_do
