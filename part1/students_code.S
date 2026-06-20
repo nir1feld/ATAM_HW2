@@ -5,7 +5,6 @@
 .extern text_to_number
 
 sum_of_text:
-    // done :)
     pushq %rbx
     pushq %r12
     pushq %r13
