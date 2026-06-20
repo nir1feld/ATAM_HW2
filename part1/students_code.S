@@ -9,6 +9,7 @@ sum_of_text:
     pushq %r12
     pushq %r13
     pushq %r14
+    pushq %r15
     pushq %rbp
     movq %rsp, %rbp
 
@@ -26,7 +27,7 @@ sum_of_text:
     xor %r14, %r14   //r14 will be the curr_sum variable
     movq $1, %rbx // will be used as the EOF flag, counts as set if less/eq to 0
 
-    movq %rsp, %rbp // this funcitons as the defcato str start. MAYBE BAD!!!
+    movq %rsp, %r15 // this funcitons as the defcato str start.
 
     // read syscall (one char at a time)
     read_char:
@@ -62,7 +63,7 @@ sum_of_text:
     movb $0, (%rsp) //replace seperator with null terminator
     
     reverse_string_on_stack:
-    movq %rbp, %r8 // r8 as char* to begin
+    movq %r15, %r8 // r8 as char* to begin
     movq %rsp, %r9 // r9 as char* to end
 
     loop:
@@ -77,10 +78,11 @@ sum_of_text:
 
     call_converter_func:
     movq %rsp, %rdi
+    andq $0xFFFFFFFFFFFFFFF0, %rsp # goofy sifratiot trick to 16 align
     call text_to_number
 
-    // reset stack
-    movq %rbp, %rsp
+    // reset stack [kinda like the string going outta scope]
+    movq %r15, %rsp 
 
     cmpw $-1, %ax
     je check_eof_flag
@@ -104,6 +106,7 @@ syscall
 xorq %rax, %rax
 movw %r14w, %ax
 popq %rbp
+popq %r15
 popq %r14
 popq %r13
 popq %r12
